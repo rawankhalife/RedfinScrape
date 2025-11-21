@@ -1,4 +1,7 @@
 import os
+IS_GITHUB = os.environ.get("GITHUB_ACTIONS") == "true"
+
+import os
 import time
 import json
 import random
@@ -19,10 +22,29 @@ from webdriver_manager.chrome import ChromeDriverManager
 ###############################################
 def setup_driver():
     options = webdriver.ChromeOptions()
-    options.add_argument("--start-maximized")
+
+    # Common flags
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--disable-gpu")
-    # 🚫 DO NOT USE HEADLESS → Redfin blocks it
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-infobars")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
+    if IS_GITHUB:
+        # -------------------------------
+        # GitHub Actions Mode (Headless)
+        # -------------------------------
+        options.add_argument("--headless=new")
+        options.add_argument("--window-size=1920,1080")
+        options.add_argument("--disable-gpu")
+        print("🚀 Running in GitHub Actions (headless masked mode)")
+    else:
+        # -------------------------------
+        # Local Development Mode
+        # -------------------------------
+        options.add_argument("--start-maximized")
+        print("💻 Running locally (full Chrome mode)")
 
     return webdriver.Chrome(
         service=Service(ChromeDriverManager().install()),
@@ -34,7 +56,7 @@ def setup_driver():
 # 2. SCRAPE LISTING URLs FROM A CITY (Selenium)
 ###############################################
 def scrape_city_urls(city_url):
-    print(f"\n🌆 Scraping listing URLs + basic info from: {city_url}")
+    print(f"\n Scraping listing URLs + basic info from: {city_url}")
     driver = setup_driver()
     driver.get(city_url)
 
