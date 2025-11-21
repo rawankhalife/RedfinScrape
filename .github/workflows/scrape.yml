@@ -2,8 +2,8 @@ name: Redfin Scraper
 
 on:
   schedule:
-    - cron: '0 */6 * * *'   # every 6 hours
-  workflow_dispatch:        # manual run
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   run-scraper:
@@ -18,10 +18,11 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Chrome
+      - name: Install Google Chrome (Ubuntu 24.04 compatible)
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget gnupg unzip xvfb libxi6 libasound2
+          sudo apt-get install -y wget gnupg xvfb libxi6 libasound2t64
+          
           wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get install -fy
 
@@ -29,15 +30,15 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run scraper
+      - name: Run Redfin scraper
         run: |
           python redfin.py
 
-      - name: Commit and push results
+      - name: Commit scraped CSVs
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           git add redfin_data/*.csv
-          git commit -m "Automated Redfin scrape"
+          git commit -m "Automated Redfin scrape" || echo "No changes to commit"
           git push
         continue-on-error: true
